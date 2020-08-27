@@ -1,89 +1,52 @@
 
-const staticCacheName = 'static-cache-v0';
-const dynamicCacheName = 'dynamic-cache-v0';
+const staticVersion = 'v0';
 
-const staticAssets = [
+const staticFiles = [
     './',
+    './manifest.json',
     './index.html',
     './images/icons/icon-128x128.png',
     './images/icons/icon-192x192.png',
+    './images/icons/icon-144x144.png',
+
+    './images/words.png',
+    './images/text.png',
+    './images/book6.png',
 
     './css/main.css',
+
     './js/app.js',
     './js/main.js',
 
-/* заглушки */
-    './offline.html',
-    './images/no-image.jpg'
 ];
 
-/*-----------------------------*/
+
+/*-------- 1) PUT ALL to Cache --- --  -- -*/
 
 self.addEventListener('install', async event => {
-    const cache = await caches.open(staticCacheName);
-    await cache.addAll(staticAssets);
-    console.log('Service worker has been installed');
+
+    const cache = await caches.open(staticVersion);
+    await cache.addAll(staticFiles);
+
 });
 
 
 
-self.addEventListener('activate', async event => {
-    const cachesKeys = await caches.keys();
-
-    const checkKeys = cachesKeys.map(async key => {
-        if (![staticCacheName, dynamicCacheName].includes(key)) {
-            await caches.delete(key);
-        }
-    });
-
-    await Promise.all(checkKeys);
-
-
-    console.log('Service worker has been activated');
-});
-
-self.addEventListener ('activate', async () => {
-    // Это будет вызвано только один раз, когда сервисный работник активирован.
-    try {
-        const options = {}
-        const subscription = await self.registration.pushManager.subscribe(options)
-        console.log(JSON.stringify(subscription))
-    } catch (err) {
-        console.log('Error', err)
-    }
-});
-
-
-/*------------- FETCH -----------------------------*/
+/*------------- 2) FETCH -----------------------------*/
 
 self.addEventListener('fetch', event => {
-    console.log(`Trying to fetch ${event.request.url}`);
 
-    event.respondWith(checkCache(event.request));
+    event.respondWith(
+
+        caches.match(event.request).then((res)=>{
+
+
+            if(res)
+                return res;
+            else
+                return fetch(event.request);
+        })
+    );
 });
 
 
-async function checkCache(req) {
-    const cachedResponse = await caches.match(req);
-    return cachedResponse || checkOnline(req);
-}
-
-/*--------------------------------------------------------*/
-
-async function checkOnline(req) {
-    const cache = await caches.open(dynamicCacheName);
-    try {
-        const res = await fetch(req);
-        await cache.put(req, res.clone());
-        return res;
-    } catch (error) {
-        const cachedRes = await cache.match(req);
-        if (cachedRes) {
-            return cachedRes;
-        } else if (req.url.indexOf('.html') !== -1) {
-            return caches.match('./offline.html');
-        } else {
-            return caches.match('./images/no-image.jpg');
-        }
-    }
-}

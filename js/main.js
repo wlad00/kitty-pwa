@@ -1,2 +1,2 @@
 
-console.log('Cool script');
+console.log('Main.js text');
