@@ -1,13 +1,9 @@
 
-const staticVersion = 'static-cache-v2';
-const dynamicVersion = 'dynamic-cache-v1';
+const staticVersion = 'static-cache-v1';
+const dynamicVersion = 'dynamic-cache-v0';
 
 const staticFiles = [
     './',
-    './css/no.css',
-    './js/no.js',
-    './images/no-image.jpg',
-
     // './index.html',
     /*'./images/icons/icon-128x128.png',
     './images/icons/icon-192x192.png',*/
@@ -17,8 +13,8 @@ const staticFiles = [
     // './js/main.js',
 
 /* заглушки */
-    // './offline.html',
-    //
+    './offline.html',
+    './images/no-image.jpg'
 ];
 
 
@@ -80,6 +76,24 @@ self.addEventListener('fetch', event => {
 });
 
 
+/*self.addEventListener('fetch', event => {
+
+    // console.log('request->');
+    // console.log(event.request);
+
+    event.respondWith(
+
+        caches.match(event.request).then((res)=>{
+
+
+            if(res)
+                return res;
+            else
+                return fetch(event.request);
+        })
+    );
+});*/
+
 async function checkCache(req) {
 
     // console.log('/2 checkCache---');
@@ -111,22 +125,23 @@ async function checkOnline(req) {
 
         /* NO INTERNET */
     } catch (error) {
+        // const cachedRes = await cache.match(req);
 
-        console.log(req);
+        /* FROM CACHE -> */
+        /*if (cachedRes) {
+            return cachedRes;
+            /!* вместо всех .html достаем заглушку offline.html*!/
+        } else */
 
-        if (req.url.indexOf('.html') !== -1) {
+            if (req.url.indexOf('.html') !== -1) {
+
+            /*console.log('no internet caches =>');
+            console.log(caches);*/
 
             return caches.match('./offline.html');
             /* вместо всех .jpg достаем заглушку no-image.jpg*/
-        }
-        else if(req.url.indexOf('.css') !== -1) {
-            return caches.match('./css/no.css');
-        }
-        else if(req.url.indexOf('.png') !== -1) {
+        }  else {
             return caches.match('./images/no-image.jpg');
-        }
-        else if(req.url.indexOf('.js') !== -1) {
-            return caches.match('./js/no.js');
         }
     }
 }

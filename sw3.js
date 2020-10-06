@@ -1,24 +1,20 @@
 
-const staticVersion = 'static-cache-v2';
-const dynamicVersion = 'dynamic-cache-v1';
+const staticVersion = 'v0';
+const dynamicVersion = 'v0';
 
 const staticFiles = [
     './',
-    './css/no.css',
-    './js/no.js',
-    './images/no-image.jpg',
-
-    // './index.html',
+    './index.html',
     /*'./images/icons/icon-128x128.png',
     './images/icons/icon-192x192.png',*/
 
-    // './css/main.css',
-    // './js/app.js',
-    // './js/main.js',
+    './css/main.css',
+    './js/app.js',
+    './js/main.js',
 
 /* заглушки */
-    // './offline.html',
-    //
+    /*'./offline.html',
+    './images/no-image.jpg'*/
 ];
 
 
@@ -72,8 +68,6 @@ self.addEventListener('fetch', event => {
 
     // console.log(`Trying to fetch ${event.request.url}`);
 
-    // console.log('/1 fetch---');
-
     event.respondWith(
         checkCache(event.request)
     );
@@ -81,9 +75,6 @@ self.addEventListener('fetch', event => {
 
 
 async function checkCache(req) {
-
-    // console.log('/2 checkCache---');
-
 
     const cachedResponse = await caches.match(req);
 
@@ -96,37 +87,30 @@ async function checkCache(req) {
 
 async function checkOnline(req) {
 
-    // console.log('/3 checkOnline---');
-
-    /*const res = await fetch(req);
-    return res;*/
+    const res = await fetch(req);
+    return res;
 
     /* GET FILE FROM INTERNET */
-    // const cache = await caches.open(dynamicVersion);
+    const cache = await caches.open(dynamicVersion);
     try {
         const res = await fetch(req);
-        // await cache.put(req, res.clone());
+        await cache.put(req, res.clone());
         return res;
 
 
         /* NO INTERNET */
     } catch (error) {
+        const cachedRes = await cache.match(req);
 
-        console.log(req);
-
-        if (req.url.indexOf('.html') !== -1) {
-
+        /* FROM CACHE -> */
+        if (cachedRes) {
+            return cachedRes;
+            /* вместо всех .html достаем заглушку offline.html*/
+        } else if (req.url.indexOf('.html') !== -1) {
             return caches.match('./offline.html');
             /* вместо всех .jpg достаем заглушку no-image.jpg*/
-        }
-        else if(req.url.indexOf('.css') !== -1) {
-            return caches.match('./css/no.css');
-        }
-        else if(req.url.indexOf('.png') !== -1) {
+        }  else {
             return caches.match('./images/no-image.jpg');
-        }
-        else if(req.url.indexOf('.js') !== -1) {
-            return caches.match('./js/no.js');
         }
     }
 }
