@@ -91,16 +91,16 @@ async function checkOnline(req) {
     return res;
 
     /* GET FILE FROM INTERNET */
-    const cache = await caches.open(dynamicVersion);
+    const cacheDynamic = await caches.open(dynamicVersion);
     try {
         const res = await fetch(req);
-        await cache.put(req, res.clone());
+        await cacheDynamic.put(req, res.clone());
         return res;
 
 
         /* NO INTERNET */
     } catch (error) {
-        const cachedRes = await cache.match(req);
+        const cachedRes = await cacheDynamic.match(req);
 
         /* FROM CACHE -> */
         if (cachedRes) {
